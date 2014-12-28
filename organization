@@ -1,0 +1,26 @@
+m.add predicate: "user" , types: [ArgumentType.UniqueID]
+m.add predicate: "business" , types: [ArgumentType.UniqueID]
+m.add predicate: "rating", types: [ArgumentType.UniqueID, ArgumentType.UniqueID]
+//m.add predicate: "ratingFriendsMajority", types: [ArgumentType.UniqueID]//need to think about its value and arguments I think /*
+m.add predicate: "ratingPrior", types: [ArgumentType.UniqueID]
+m.add predicate: "businessAvgRating", types: [ArgumentType.UniqueID]
+m.add predicate: "friends" , types: [ArgumentType.UniqueID, ArgumentType.UniqueID]
+//m.add predicate: "review_count" , types: [ArgumentType.UniqueID]
+
+//m.add predicate: "bestReviewer", types: [ArgumentType.UniqueID, ArgumentType.UniqueID]
+//m.add predicate: "votes", types : [ArgumentType.UniqueID//
+//m.add predicate: "fans" , types: [ArgumentType.UniqueID]
+
+m.add predicate: "simObsRatingU", types: [ArgumentType.UniqueID, ArgumentType.UniqueID]
+m.add predicate: "simObsRatingB", types: [ArgumentType.UniqueID, ArgumentType.UniqueID]
+
+
+//m.add function: "similaruser" , implementation: new userSimilarity()//write implementation*/
+//m.add function: "similaritem" , implementation: new itemSimilarity ()
+//m.add function: "ratingFriendsMajority", implementation : new ratingFriendsMajority()// majority rating among friends/*
+//m.add function: "bestReviewer" , implementation : new bestReviewer()
+
+//two sided prior
+//UniqueID constant = data.getUniqueID(0)
+m.add rule: ( user(U) & business(B) & ratingPrior(U) ) >> rating(U,B), weight: 5.0;
+m.add rule: ( rating(U,B) ) >> ratingPrior(U), weight: 5.0 ;
