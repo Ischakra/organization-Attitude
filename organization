@@ -67,17 +67,22 @@ m.add predicate: "neutralTweet" , types: [ArgumentType.UniqueID] \\ Argument :tw
 \\m.add predicate: "orgFollower" , types: [ArgumentType.UniqueID, ArgumentType.UniqueID]\\user id, user id (org): may be inferred 
 m.add predicate: "group", types: [ArgumentType.UniqueID]
 m.add predicate: "ally",types: [ArgumentType.UniqueID, ArgumentType.UniqueID] \\user id, user id
-m.add predicate: "anti",types:[ArgumentType.UniqueID, ArgumentType.UniqueID] \\user id, user id
+m.add predicate: "anti",types: [ArgumentType.UniqueID, ArgumentType.UniqueID] \\user id, user id
 m.add predicate: "hasGroup",types: [ArgumentType.UniqueID, ArgumentType.UniqueID] \\user id, user id
 m.add predicate: "sameGroup",types: [ArgumentType.UniqueID, ArgumentType.UniqueID] \\user id, user id
 \\m.add predicate: "friends" , types: [ArgumentType.UniqueID, ArgumentType.UniqueID] \\user id, user id : not requied
 \\m.add predicate: "similarFollower", types: [ArgumentType.UniqueID, ArgumentType.UniqueID] \\ user id, user id : not required
 \\but will be useful to explore a followers' profile,recommend which org to follow, or in case the follower base is too small
 
-
+\\baseline
 m.add rule: ( org(O1) & org(O2) & tweet(T) & orgTweet(T,U) & containsOrg(T,O2) & posTweet(T) ) >> orgFriends(O1,O2), weight: 5.0;
 m.add rule: ( org(O1) & org(O2) & tweet(T) & orgTweet(T,U) & containsOrg(T,O2) & negTweet(T) ) >> orgCompetitors(O1,O2), weight: 5.0;
-m.add rule: Org
+\\Group based
+m.add rule: ( org(O1) & org(O2) & group(G1) & group(G2) & hasGroup(O1,G1) & hasGroup(O2,G1))>> orgFriends(O1,O2)
+m.add rule: ( org(O1) & org(O2) & group(G1) & group(G2) & hasGroup(O1,G1) & hasGroup(O2,G2) & ally(G1,G2))>>orgFriends(O1,O2)
+m.add rule: ( org(O1) & org(O2) & group(G1) & group(G2) & hasGroup(O1,G1) & hasGroup(O2,G2) & anti(G1,G2))>>orgCompetitors(O1,O2)
+\\Latent group identification
+
 \\m.add rule: ( org(O1) & org(O2) & orgFollower(U,O1) & tweet(T) & followerTweet(T,U) & tweetContainsOrgname(T,O2) & neutralTweet(T) ) >> orgNeutral(O1,O2), weight: 5.0;
 \\m.add rule: (orgFollower(U1) & twitterUser(U2) & friends(U1,U2)) >> orgFollower(U2), weight: 5.0; \\ may need this rule if we don't have enough followers
 \\m.add rule: (orgFollower(U1) & twitterUser(U2) & similarFollower(U1,U2)) >> orgFollower(U2), weight: 5.0; \\ may need this rule if we don't have enough followers
