@@ -58,9 +58,11 @@ m.add predicate: "OrgNeutral" , types: [ArgumentType.UniqueID, ArgumentType.Uniq
 
 m.add predicate: "twitterUser" , types: [ArgumentType.UniqueID] \\twitter user id : both org and followers
 m.add predicate: "tweet" , types: [ArgumentType.UniqueID] \\ tweet id
+m.add predicate: "hashtag" , types: [ArgumentType.UniqueID] \\ hashtag id
 \\m.add predicate: "followerTweet" , types: [ArgumentType.UniqueID, ArgumentType.UniqueID] \\Argument : tweet id,userid 
 m.add predicate: "OrgTweet" , types: [ArgumentType.UniqueID, ArgumentType.UniqueID] \\Argument : tweet id,userid (org)
-m.add predicate: "containsOrg" , types: [ArgumentType.UniqueID, ArgumentType.UniqueID] \\tweet id, userid (org)
+m.add predicate: "hasOrg" , types: [ArgumentType.UniqueID, ArgumentType.UniqueID] \\tweet id, userid (org)
+m.add predicate: "hasHashtag" , types: [ArgumentType.UniqueID, ArgumentType.UniqueID] \\tweet id, Hashtagid 
 m.add predicate: "posTweet" , types: [ArgumentType.UniqueID] \\ Argument :tweet id
 m.add predicate: "negTweet" , types: [ArgumentType.UniqueID] \\ Argument :tweet id
 m.add predicate: "neutralTweet" , types: [ArgumentType.UniqueID] \\ Argument :tweet id
@@ -75,13 +77,15 @@ m.add predicate: "sameGroup",types: [ArgumentType.UniqueID, ArgumentType.UniqueI
 \\but will be useful to explore a followers' profile,recommend which org to follow, or in case the follower base is too small
 
 \\baseline
-m.add rule: ( org(O1) & org(O2) & tweet(T) & orgTweet(T,U) & containsOrg(T,O2) & posTweet(T) ) >> orgFriends(O1,O2), weight: 5.0;
-m.add rule: ( org(O1) & org(O2) & tweet(T) & orgTweet(T,U) & containsOrg(T,O2) & negTweet(T) ) >> orgCompetitors(O1,O2), weight: 5.0;
+m.add rule: ( org(O1) & org(O2) & tweet(T) & orgTweet(T,O1) & hasOrg(T,O2) & posTweet(T) ) >> orgFriends(O1,O2), weight: 5.0;
+m.add rule: ( org(O1) & org(O2) & tweet(T) & orgTweet(T,O1) & hasOrg(T,O2) & negTweet(T) ) >> orgCompetitors(O1,O2), weight: 5.0;
 \\Group based
 m.add rule: ( org(O1) & org(O2) & group(G1) & group(G2) & hasGroup(O1,G1) & hasGroup(O2,G1))>> orgFriends(O1,O2)
 m.add rule: ( org(O1) & org(O2) & group(G1) & group(G2) & hasGroup(O1,G1) & hasGroup(O2,G2) & ally(G1,G2))>>orgFriends(O1,O2)
 m.add rule: ( org(O1) & org(O2) & group(G1) & group(G2) & hasGroup(O1,G1) & hasGroup(O2,G2) & anti(G1,G2))>>orgCompetitors(O1,O2)
 \\Latent group identification
+m.add rule: (org(O1) & hashtag(H) & Tweet(T1) & orgTweet(O1,T1))>> orgHashtag(O1,H)
+m.add rule: (org(O1) & hashtag(H) & org(O2) & orgHashtag(O1,H) & orgHashtag(O2,H) >> sameGroup(O1,O2)
 
 \\m.add rule: ( org(O1) & org(O2) & orgFollower(U,O1) & tweet(T) & followerTweet(T,U) & tweetContainsOrgname(T,O2) & neutralTweet(T) ) >> orgNeutral(O1,O2), weight: 5.0;
 \\m.add rule: (orgFollower(U1) & twitterUser(U2) & friends(U1,U2)) >> orgFollower(U2), weight: 5.0; \\ may need this rule if we don't have enough followers
