@@ -56,8 +56,9 @@ m.add predicate: "orgFriends" , types: [ArgumentType.UniqueID, ArgumentType.Uniq
 m.add predicate: "OrgCompetitors" , types: [ArgumentType.UniqueID, ArgumentType.UniqueID]\\user id (org), user id (org) : to be inferred
 m.add predicate: "OrgNeutral" , types: [ArgumentType.UniqueID, ArgumentType.UniqueID]\\user id (org), user id (org) : to be inferred
 
-m.add predicate: "twitterUser" , types: [ArgumentType.UniqueID] \\twitter user id : both org and followers
+\\m.add predicate: "twitterUser" , types: [ArgumentType.UniqueID] \\twitter user id : both org and followers
 m.add predicate: "tweet" , types: [ArgumentType.UniqueID] \\ tweet id
+m.add predicate: "isRetweet" , types: [ArgumentType.UniqueID,ArgumentType.UniqueID] \\ tweet id,org id
 m.add predicate: "hashtag" , types: [ArgumentType.UniqueID] \\ hashtag id
 \\m.add predicate: "followerTweet" , types: [ArgumentType.UniqueID, ArgumentType.UniqueID] \\Argument : tweet id,userid 
 m.add predicate: "OrgTweet" , types: [ArgumentType.UniqueID, ArgumentType.UniqueID] \\Argument : tweet id,userid (org)
@@ -86,6 +87,7 @@ m.add rule: ( org(O1) & org(O2) & group(G1) & group(G2) & hasGroup(O1,G1) & hasG
 \\Latent group identification
 m.add rule: (org(O1) & hashtag(H) & Tweet(T1) & orgTweet(O1,T1))>> orgHashtag(O1,H)
 m.add rule: (org(O1) & hashtag(H) & org(O2) & orgHashtag(O1,H) & orgHashtag(O2,H) >> sameGroup(O1,O2)
+m.add rule: (org(O1) & Tweet(T1) & orgTweet(O1,T1) & isRetweet(T1,O2) & org(O2) >> sameGroup(O1,O2)
 
 \\m.add rule: ( org(O1) & org(O2) & orgFollower(U,O1) & tweet(T) & followerTweet(T,U) & tweetContainsOrgname(T,O2) & neutralTweet(T) ) >> orgNeutral(O1,O2), weight: 5.0;
 \\m.add rule: (orgFollower(U1) & twitterUser(U2) & friends(U1,U2)) >> orgFollower(U2), weight: 5.0; \\ may need this rule if we don't have enough followers
