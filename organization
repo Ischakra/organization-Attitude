@@ -62,6 +62,7 @@ m.add predicate: "isRetweet" , types: [ArgumentType.UniqueID,ArgumentType.Unique
 m.add predicate: "hashtag" , types: [ArgumentType.UniqueID] \\ hashtag id
 \\m.add predicate: "followerTweet" , types: [ArgumentType.UniqueID, ArgumentType.UniqueID] \\Argument : tweet id,userid 
 m.add predicate: "OrgTweet" , types: [ArgumentType.UniqueID, ArgumentType.UniqueID] \\Argument : tweet id,userid (org)
+m.add predicate: "OrgHashtag" , types: [ArgumentType.UniqueID, ArgumentType.UniqueID] \\Argument : hashtag id id,userid (or
 m.add predicate: "hasOrg" , types: [ArgumentType.UniqueID, ArgumentType.UniqueID] \\tweet id, userid (org)
 m.add predicate: "hasHashtag" , types: [ArgumentType.UniqueID, ArgumentType.UniqueID] \\tweet id, Hashtagid 
 m.add predicate: "posTweet" , types: [ArgumentType.UniqueID] \\ Argument :tweet id
@@ -80,14 +81,21 @@ m.add predicate: "sameGroup",types: [ArgumentType.UniqueID, ArgumentType.UniqueI
 \\baseline
 m.add rule: ( org(O1) & org(O2) & tweet(T) & orgTweet(T,O1) & hasOrg(T,O2) & posTweet(T) ) >> orgFriends(O1,O2), weight: 5.0;
 m.add rule: ( org(O1) & org(O2) & tweet(T) & orgTweet(T,O1) & hasOrg(T,O2) & negTweet(T) ) >> orgCompetitors(O1,O2), weight: 5.0;
+m.add rule: ( org(O1) & hashtag(H) & tweet(T) & orgTweet(T,O1) & hasHashtag(T,H) & posTweet(T) )>> posStance (O1,H)
+m.add rule: ( org(O1) & hashtag(H) & tweet(T) & orgTweet(T,O1) & hasHashtag(T,H) & negTweet(T) )>> negStance (O1,H)
+m.add rule: ( org(O1) & hashtag(H) & org(O2) & posStance(O1,H) & posStance(O2,H) >> orgFriends(O1,O2)
+m.add rule: ( org(O1) & hashtag(H) & org(O2) & negStance(O1,H) & negStance(O2,H) >> orgCompetitors(O1,O2)
 \\Group based
 m.add rule: ( org(O1) & org(O2) & group(G1) & group(G2) & hasGroup(O1,G1) & hasGroup(O2,G1))>> orgFriends(O1,O2)
 m.add rule: ( org(O1) & org(O2) & group(G1) & group(G2) & hasGroup(O1,G1) & hasGroup(O2,G2) & ally(G1,G2))>>orgFriends(O1,O2)
 m.add rule: ( org(O1) & org(O2) & group(G1) & group(G2) & hasGroup(O1,G1) & hasGroup(O2,G2) & anti(G1,G2))>>orgCompetitors(O1,O2)
 \\Latent group identification
-m.add rule: (org(O1) & hashtag(H) & Tweet(T1) & orgTweet(O1,T1))>> orgHashtag(O1,H)
+m.add rule: (org(O1) & hashtag(H) & Tweet(T1) & hasHashtag(T1,H)& orgTweet(O1,T1))>> orgHashtag(H,O1)
 m.add rule: (org(O1) & hashtag(H) & org(O2) & orgHashtag(O1,H) & orgHashtag(O2,H) >> sameGroup(O1,O2)
 m.add rule: (org(O1) & Tweet(T1) & orgTweet(O1,T1) & isRetweet(T1,O2) & org(O2) >> sameGroup(O1,O2)
+m.add rule: ( org(O1) & hashtag(H) & org(O2) & posStance(O1,H) & posStance(O2,H) >> sameGroup(O1,O2)
+m.add rule: ( org(O1) & hashtag(H) & org(O2) & negStance(O1,H) & negStance(O2,H) >> sameGroup(O1,O2)
+m.add rule: ( org(O1) & org(O2) & org(O3) & sameGroup(O1,O2) & sameGroup(O2,O3) >> sameGroup(O1,O3)
 
 \\m.add rule: ( org(O1) & org(O2) & orgFollower(U,O1) & tweet(T) & followerTweet(T,U) & tweetContainsOrgname(T,O2) & neutralTweet(T) ) >> orgNeutral(O1,O2), weight: 5.0;
 \\m.add rule: (orgFollower(U1) & twitterUser(U2) & friends(U1,U2)) >> orgFollower(U2), weight: 5.0; \\ may need this rule if we don't have enough followers
