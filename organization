@@ -79,8 +79,10 @@ m.add predicate: "sameGroup",types: [ArgumentType.UniqueID, ArgumentType.UniqueI
 \\but will be useful to explore a followers' profile,recommend which org to follow, or in case the follower base is too small
 
 \\baseline
-m.add rule: ( org(O1) & org(O2) & tweet(T) & orgTweet(T,O1) & hasOrg(T,O2) & posTweet(T) ) >> orgFriends(O1,O2), weight: 5.0;
-m.add rule: ( org(O1) & org(O2) & tweet(T) & orgTweet(T,O1) & hasOrg(T,O2) & negTweet(T) ) >> orgCompetitors(O1,O2), weight: 5.0;
+\\m.add rule: ( org(O1) & org(O2) & tweet(T) & orgTweet(T,O1) & hasOrg(T,O2) & posTweet(T) ) >> orgFriends(O1,O2), weight: 5.0;
+m.add rule: ( orgTweet(T,O1) & hasOrg(T,O2) & posTweet(T) ) >> orgFriends(O1,O2), weight: 5.0;
+m.add rule: ( orgTweet(T,O1) & hasOrg(T,O2) & negTweet(T) ) >> orgCompetitors(O1,O2), weight: 5.0;
+\\m.add rule: ( org(O1) & org(O2) & tweet(T) & orgTweet(T,O1) & hasOrg(T,O2) & negTweet(T) ) >> orgCompetitors(O1,O2), weight: 5.0;
 m.add rule: ( org(O1) & hashtag(H) & tweet(T) & orgTweet(T,O1) & hasHashtag(T,H) & posTweet(T) )>> posStance (O1,H)
 m.add rule: ( org(O1) & hashtag(H) & tweet(T) & orgTweet(T,O1) & hasHashtag(T,H) & negTweet(T) )>> negStance (O1,H)
 m.add rule: ( org(O1) & hashtag(H) & org(O2) & posStance(O1,H) & posStance(O2,H) >> orgFriends(O1,O2)
@@ -133,10 +135,39 @@ Partition labels_te = new Partition(5 + fold * folds);
 
 def inserter;
 // users
-inserter = data.getInserter(user, read_tr);
-InserterUtils.loadDelimitedData(inserter, dataPath + "/users-tr.txt");// need to change
-inserter = data.getInserter(user, read_te);
-InserterUtils.loadDelimitedData(inserter, dataPath + "/users-te.txt");// need to change
+inserter = data.getInserter(orgTweet, read_tr);
+InserterUtils.loadDelimitedData(inserter, dataPath + "/orgTweet-tr.txt");// need to change
+inserter = data.getInserter(orgTweet, read_te);
+InserterUtils.loadDelimitedData(inserter, dataPath + "/orgTweet-te.txt");// need to change
+
+inserter = data.getInserter(hasOrg, read_tr);
+InserterUtils.loadDelimitedData(inserter, dataPath + "/hasOrg-tr.txt");// need to change
+inserter = data.getInserter(hasOrg, read_te);
+InserterUtils.loadDelimitedData(inserter, dataPath + "/hasOrg-te.txt");// need to change
+
+inserter = data.getInserter(posTweet, read_tr);
+InserterUtils.loadDelimitedData(inserter, dataPath + "/posTweet-tr.txt");// need to change
+inserter = data.getInserter(posTweet, read_te);
+InserterUtils.loadDelimitedData(inserter, dataPath + "/posTweet-te.txt");// need to change
+
+inserter = data.getInserter(negTweet, read_tr);
+InserterUtils.loadDelimitedData(inserter, dataPath + "/negTweet-tr.txt");// need to change
+inserter = data.getInserter(negTweet, read_te);
+InserterUtils.loadDelimitedData(inserter, dataPath + "/negTweet-te.txt");// need to change
+
+inserter = data.getInserter(hasHashtag, read_tr);
+InserterUtils.loadDelimitedData(inserter, dataPath + "/hasHashtag-tr.txt");// need to change
+inserter = data.getInserter(hasHashtag, read_te);
+InserterUtils.loadDelimitedData(inserter, dataPath + "/hasHashtag-te.txt");// need to change
+
+//inserter = data.getInserter(, read_tr);
+//InserterUtils.loadDelimitedData(inserter, dataPath + "/posTweet-tr.txt");// need to change
+//inserter = data.getInserter(posTweet, read_te);
+//InserterUtils.loadDelimitedData(inserter, dataPath + "/posTweet-te.txt");// need to change
+
+
+
+
 
 inserter = data.getInserter(rating, read_te);
 InserterUtils.loadDelimitedDataTruth(inserter, dataPath + "/ratings/yelp-1-te-obs-" + fold + ".txt");
