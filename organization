@@ -65,6 +65,7 @@ m.add predicate: "OrgTweet" , types: [ArgumentType.UniqueID, ArgumentType.Unique
 m.add predicate: "OrgHashtag" , types: [ArgumentType.UniqueID, ArgumentType.UniqueID] \\Argument : hashtag id id,userid (or
 m.add predicate: "hasOrg" , types: [ArgumentType.UniqueID, ArgumentType.UniqueID] \\tweet id, userid (org)
 m.add predicate: "hasHashtag" , types: [ArgumentType.UniqueID, ArgumentType.UniqueID] \\tweet id, Hashtagid 
+m.add predicate: "sentTweet" , types: [ArgumentType.UniqueID,ArgumentType.UniqueID] \\ Argument :tweet id,sent id
 m.add predicate: "posTweet" , types: [ArgumentType.UniqueID] \\ Argument :tweet id
 m.add predicate: "negTweet" , types: [ArgumentType.UniqueID] \\ Argument :tweet id
 m.add predicate: "neutralTweet" , types: [ArgumentType.UniqueID] \\ Argument :tweet id
@@ -81,8 +82,7 @@ m.add predicate: "sameGroup",types: [ArgumentType.UniqueID, ArgumentType.UniqueI
 \\baseline
 \\m.add rule: ( org(O1) & org(O2) & tweet(T) & orgTweet(T,O1) & hasOrg(T,O2) & posTweet(T) ) >> orgFriends(O1,O2), weight: 5.0;
 m.add rule: ( orgTweet(T,O1) & hasOrg(T,O2) & posTweet(T) ) >> orgFriends(O1,O2), weight: 5.0;
-\\m.add rule: for (int i=1; i <= 3; ++i)
-   orgTweet(T,O1) & hasOrg(T,O2) & posTweet(T) ) >> orgAttitude(O1,O2,i)
+\\m.add rule:(orgTweet(T,O1) & hasOrg(T,O2) & sentTweet(T,i) ) >> orgAttitude(O1,O2,i)
 m.add rule: ( orgTweet(T,O1) & hasOrg(T,O2) & negTweet(T) ) >> orgCompetitors(O1,O2), weight: 5.0;
 \\m.add rule: ( org(O1) & org(O2) & tweet(T) & orgTweet(T,O1) & hasOrg(T,O2) & negTweet(T) ) >> orgCompetitors(O1,O2), weight: 5.0;
 m.add rule: ( org(O1) & hashtag(H) & tweet(T) & orgTweet(T,O1) & hasHashtag(T,H) & posTweet(T) )>> posStance (O1,H)
@@ -171,36 +171,37 @@ InserterUtils.loadDelimitedData(inserter, dataPath + "/hasHashtag.txt");// need 
 
 
 
-inserter = data.getInserter(, read_tr);
-InserterUtils.loadDelimitedDataTruth(inserter, dataPath + "/ratings/yelp-1-tr-obs-" + fold + ".txt");
-inserter = data.getInserter(rating, read_te);
-InserterUtils.loadDelimitedDataTruth(inserter, dataPath + "/ratings/yelp-1-te-obs-" + fold + ".txt");
+inserter = data.getInserter(orgAttitude, read_tr);
+InserterUtils.loadDelimitedDataTruth(inserter, dataPath + "/orgAttitude-tr-obs-" + fold + ".txt");
+inserter = data.getInserter(orgAttitude, read_te);
+InserterUtils.loadDelimitedDataTruth(inserter, dataPath + "/orgAttitude-te-obs-" + fold + ".txt");
 
-inserter = data.getInserter(rating, labels_tr);
-InserterUtils.loadDelimitedDataTruth(inserter, dataPath + "/ratings/yelp-1-tr-uno-" + fold + ".txt");
+inserter = data.getInserter(orgAttitude, labels_tr);
+InserterUtils.loadDelimitedDataTruth(inserter, dataPath + "/orgAttitude-tr-uno-" + fold + ".txt");
 log.info("{} \t", fold);
-inserter = data.getInserter(rating, labels_te);
-InserterUtils.loadDelimitedDataTruth(inserter, dataPath + "/ratings/yelp-1-te-uno-" + fold + ".txt");
+inserter = data.getInserter(orgAttitude, labels_te);
+InserterUtils.loadDelimitedDataTruth(inserter, dataPath + "/orgAttitude-te-uno-" + fold + ".txt");
 
 
 
 /** POPULATE DB ***/
-/* We want to populate the database with all groundings 'rating'
-* To do so, we will query for all users and bussiness in train/test, then use the
+/* We want to populate the database with all groundings 'orgAttitude'
+* To do so, we will query for all input predicates in train/test, then use the
 * database populator to compute the cross-product.
 **********check **************************************
 */
 DatabasePopulator dbPop;
-Variable User = new Variable("User");
-Variable Business = new Variable("Business");
-Set<GroundTerm> users = new HashSet<GroundTerm>();
-Set<GroundTerm> businesses = new HashSet<GroundTerm>();
+Variable Org = new Variable("Org");
+Variable Tweet = new Variable("Tweet");
+Variable Hashtag = new Variable("Hashtag");
+Set<GroundTerm> orgs = new HashSet<GroundTerm>();
+Set<GroundTerm> tweets = new HashSet<GroundTerm>();
+Set<GroundTerm> hashtags = new HashSet<GroundTerm>();
 Map<Variable, Set<GroundTerm>> subs = new HashMap<Variable, Set<GroundTerm>>();
-subs.put(User, users);
-subs.put(Business, businesses);
+subs.put(Org, orgs);
+subs.put(Tweet, tweets);
+subs.put(Hashtag, hashtags);
 def toClose;
-AdjCosineSimilarity userCosSim = new AdjCosineSimilarity(rating, 1, ratingPrior, simThresh);
-AdjCosineSimilarity businessCosSim = new AdjCosineSimilarity(rating, 0, businessAvgRating, simThresh);
 Database trainDB = data.getDatabase(read_tr);
 ResultList userGroundings = trainDB.executeQuery(Queries.getQueryForAllAtoms(user));
 for (int i = 0; i < userGroundings.size(); i++) {
