@@ -203,34 +203,34 @@ subs.put(Tweet, tweets);
 subs.put(Hashtag, hashtags);
 def toClose;
 Database trainDB = data.getDatabase(read_tr);
-ResultList userGroundings = trainDB.executeQuery(Queries.getQueryForAllAtoms(user));
-for (int i = 0; i < userGroundings.size(); i++) {
-GroundTerm u = userGroundings.get(i)[0];
-users.add(u);// adding u to the Map of users
+ResultList orgGroundings = trainDB.executeQuery(Queries.getQueryForAllAtoms(org));
+for (int i = 0; i < orgGroundings.size(); i++) {
+GroundTerm u = orgGroundings.get(i)[0];
+orgs.add(u);// adding u to the Map of orgs
 
 
 
 log.info("Populating training database ...");
-toClose = [user,business,rating,ratingPrior,businessAvgRating,friends,simObsRatingB,simObsRatingU] as Set// check
+toClose = [org,tweet,hashtag,orgTweet,hasOrg,hasHashtag,posTweet,negTweet,neutralTweet,sentTweet] as Set// check
 trainDB = data.getDatabase(write_tr, toClose, read_tr);
 dbPop = new DatabasePopulator(trainDB);
-dbPop.populate(new QueryAtom(rating, User, Business), subs);
-Database labelsDB = data.getDatabase(labels_tr, [rating] as Set)
+dbPop.populate(new QueryAtom(orgAttitude,Org,Org), subs);
+Database labelsDB = data.getDatabase(labels_tr, [orgAttitude] as Set)
 
 
 Database testDB = data.getDatabase(read_te);
-userGroundings = testDB.executeQuery(Queries.getQueryForAllAtoms(user));
-for (int i = 0; i < userGroundings.size(); i++) {
-GroundTerm u = userGroundings.get(i)[0];
-users.add(u);// a
+userGroundings = testDB.executeQuery(Queries.getQueryForAllAtoms(org));
+for (int i = 0; i < orgGroundings.size(); i++) {
+GroundTerm u = orgGroundings.get(i)[0];
+orgs.add(u);// adding u to the map of orgs
 
 
 /* Populate testing database. */
 log.info("Populating testing database ...");
-toClose = [user,business,rating,ratingPrior,businessAvgRating,friends,simObsRatingB,simObsRatingU] as Set;// check with sachi
+toClose =  [org,tweet,hashtag,orgTweet,hasOrg,hasHashtag,posTweet,negTweet,neutralTweet,sentTweet] as Set;// check with sachi
 testDB = data.getDatabase(write_te, toClose, read_te);
 dbPop = new DatabasePopulator(testDB);
-dbPop.populate(new QueryAtom(rating, User, Business), subs);
+dbPop.populate(new QueryAtom(orgAttitude,Org,Org), subs);
 // no labels?
 testDB.close();
 
