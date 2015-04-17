@@ -46,6 +46,7 @@ methods = ["MLE","MPLE","MM"];
 //configGenerator.setVotedPerceptronStepSizes([(double) 1.0]);
 folds=1
 
+
 /*** MODEL DEFINITION ***/
 log.info("Initializing model ...");
 PSLModel m = new PSLModel(this, data);
@@ -82,11 +83,12 @@ m.add predicate: "sameGroup",types: [ArgumentType.UniqueID, ArgumentType.UniqueI
 \\baseline
 \\m.add rule: ( org(O1) & org(O2) & tweet(T) & orgTweet(T,O1) & hasOrg(T,O2) & posTweet(T) ) >> orgFriends(O1,O2), weight: 5.0;
 m.add rule: ( orgTweet(T,O1) & hasOrg(T,O2) & posTweet(T) ) >> orgFriends(O1,O2), weight: 5.0;
-\\m.add rule:(orgTweet(T,O1) & hasOrg(T,O2) & sentTweet(T,i) ) >> orgAttitude(O1,O2,i)
+\\m.add rule:(org(O1) & org(O2) & orgTweet(T,O1) & hasOrg(T,O2) & sentTweet(T,i) ) >> orgAttitude(O1,O2,i)
 m.add rule: ( orgTweet(T,O1) & hasOrg(T,O2) & negTweet(T) ) >> orgCompetitors(O1,O2), weight: 5.0;
 \\m.add rule: ( org(O1) & org(O2) & tweet(T) & orgTweet(T,O1) & hasOrg(T,O2) & negTweet(T) ) >> orgCompetitors(O1,O2), weight: 5.0;
 m.add rule: ( org(O1) & hashtag(H) & tweet(T) & orgTweet(T,O1) & hasHashtag(T,H) & posTweet(T) )>> posStance (O1,H)
 m.add rule: ( org(O1) & hashtag(H) & tweet(T) & orgTweet(T,O1) & hasHashtag(T,H) & negTweet(T) )>> negStance (O1,H)
+\\ m.add rule:(org(O1) & orgTweet(T,O1) & hasHashtag(T,H) & sentTweet(T,i) )>> stance (O1,H,i)
 m.add rule: ( org(O1) & hashtag(H) & org(O2) & posStance(O1,H) & posStance(O2,H) >> orgFriends(O1,O2)
 m.add rule: ( org(O1) & hashtag(H) & org(O2) & negStance(O1,H) & negStance(O2,H) >> orgCompetitors(O1,O2)
 \\Group based
@@ -194,19 +196,28 @@ DatabasePopulator dbPop;
 Variable Org = new Variable("Org");
 Variable Tweet = new Variable("Tweet");
 Variable Hashtag = new Variable("Hashtag");
+Variable I = new Variable("I");
 Set<GroundTerm> orgs = new HashSet<GroundTerm>();
 Set<GroundTerm> tweets = new HashSet<GroundTerm>();
 Set<GroundTerm> hashtags = new HashSet<GroundTerm>();
+Set<GroundTerm> i = new Hashset<GroundTerm>();
 Map<Variable, Set<GroundTerm>> subs = new HashMap<Variable, Set<GroundTerm>>();
 subs.put(Org, orgs);
-subs.put(Tweet, tweets);
+//subs.put(Tweet, tweets);
 subs.put(Hashtag, hashtags);
+subs.put(I,i);
 def toClose;
 Database trainDB = data.getDatabase(read_tr);
 ResultList orgGroundings = trainDB.executeQuery(Queries.getQueryForAllAtoms(org));
 for (int i = 0; i < orgGroundings.size(); i++) {
 GroundTerm u = orgGroundings.get(i)[0];
 orgs.add(u);// adding u to the Map of orgs
+}
+for (int k = 1; k <= 3; i++)
+{ 
+  GroundTerm u = k;
+  i.add(u);//adding u to the map of i
+}
 
 
 
@@ -214,7 +225,8 @@ log.info("Populating training database ...");
 toClose = [org,tweet,hashtag,orgTweet,hasOrg,hasHashtag,posTweet,negTweet,neutralTweet,sentTweet] as Set// check
 trainDB = data.getDatabase(write_tr, toClose, read_tr);
 dbPop = new DatabasePopulator(trainDB);
-dbPop.populate(new QueryAtom(orgAttitude,Org,Org), subs);
+dbPop.populate(new QueryAtom(orgAttitude,Org,Org,I), subs);
+dbPop.populate(new QueryAtom(Stance,Org,Hashtag,I), subs);
 Database labelsDB = data.getDatabase(labels_tr, [orgAttitude] as Set)
 
 
@@ -223,14 +235,19 @@ userGroundings = testDB.executeQuery(Queries.getQueryForAllAtoms(org));
 for (int i = 0; i < orgGroundings.size(); i++) {
 GroundTerm u = orgGroundings.get(i)[0];
 orgs.add(u);// adding u to the map of orgs
-
-
+}
+for (int k = 1; k <= 3; i++)
+{ 
+  GroundTerm u = k;
+  i.add(u);//adding u to the map of i
+}
 /* Populate testing database. */
 log.info("Populating testing database ...");
 toClose =  [org,tweet,hashtag,orgTweet,hasOrg,hasHashtag,posTweet,negTweet,neutralTweet,sentTweet] as Set;// check with sachi
 testDB = data.getDatabase(write_te, toClose, read_te);
 dbPop = new DatabasePopulator(testDB);
 dbPop.populate(new QueryAtom(orgAttitude,Org,Org), subs);
+dbPop.populate(new QueryAtom(Stance,Org,Hashtag,I), subs);
 // no labels?
 testDB.close();
 
