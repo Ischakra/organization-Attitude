@@ -1,7 +1,7 @@
 package Organization;
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import crowdsourcing.AdjCosineSimilarity;
+#import crowdsourcing.AdjCosineSimilarity;
 import util.ExperimentConfigGenerator;
 import util.WeightLearner;
 import com.google.common.collect.Iterables
@@ -259,44 +259,45 @@ log.info("Starting experiment ...");
 //def configName = config.getString("name", "");
 //def method = config.getString("learningmethod", "");
 /* Weight learning */
-WeightLearner.learn("MLE", m, trainDB, labelsDB, initWeights, config, log)
+WeightLearner.learn("MLE", m, trainDB, labelsDB, initWeights, cb, log)
 log.info("Learned model {}: \n {}", configName, m.toString())
 /* Inference on test set */
 Database predDB = data.getDatabase(write_te, toClose, read_te);
-Set<GroundAtom> allAtoms = Queries.getAllAtoms(predDB, rating)
+Set<GroundAtom> allAtoms = Queries.getAllAtoms(predDB, orgAttitude)
 for (RandomVariableAtom atom : Iterables.filter(allAtoms, RandomVariableAtom))
 atom.setValue(0.0)
 /* For discrete MRFs, "MPE" inference will actually perform marginal inference */
-MPEInference mpe = new MPEInference(m, predDB, config)
+MPEInference mpe = new MPEInference(m, predDB, cb)
 FullInferenceResult result = mpe.mpeInference()
 log.info("Objective: {}", result.getTotalWeightedIncompatibility())
 predDB.close();
 
 /* Evaluation *///check
 predDB = data.getDatabase(write_te);
-Database groundTruthDB = data.getDatabase(labels_te, [rating] as Set)
+Database groundTruthDB = data.getDatabase(labels_te, [orgAttitude] as Set)
 def comparator = new ContinuousPredictionComparator(predDB)
 comparator.setBaseline(groundTruthDB)
 def metrics = [ContinuousPredictionComparator.Metric.MSE, ContinuousPredictionComparator.Metric.MAE]
 double [] score = new double[metrics.size()]
 for (int i = 0; i < metrics.size(); i++) {
 comparator.setMetric(metrics.get(i))
-score[i] = comparator.compare(rating)
+score[i] = comparator.compare(orgAttitude)
 }
 log.info("Fold {} : {} : MSE {} : MAE {}", fold, configName, score[0], score[1]);
-expResults.get(config).add(fold, score);
+evaFile.append("fold {} \t"+ fold +"MSE : "+ score[0] +"\t"+ "MAE: "+ score[1]+"\n");
+expResults.get(cb).add(fold, score);
 predDB.close();
 groundTruthDB.close()
 }
 trainDB.close()
 }
 log.info("\n\nRESULTS\n");
-for (ConfigBundle config : configs) {
-def configName = config.getString("name", "")
-def scores = expResults.get(config);
+//for (ConfigBundle config : configs) {
+//def configName = config.getString("name", "")
+def scores = expResults.get(cb);
 for (int fold = 0; fold < folds; fold++) {
 def score = scores.get(fold)
-log.info("{} \t{}\t{}\t{}", configName, fold, score[0], score[1]);
-log.Debug("{} \t{}\t{}\t{}", configName, fold, score[0], score[1]);// added
+log.info("{} \t{}\t{}\t{}", cb, fold, score[0], score[1]);
+//log.Debug("{} \t{}\t{}\t{}", cb, fold, score[0], score[1]);// added
 }
 }
