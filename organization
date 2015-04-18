@@ -45,7 +45,7 @@ methods = ["MLE","MPLE","MM"];
 //configGenerator.setVotedPerceptronStepCounts([100]);
 //configGenerator.setVotedPerceptronStepSizes([(double) 1.0]);
 folds=1
-
+File evaFile= new File("./data/evaluationFileWI.txt");
 
 /*** MODEL DEFINITION ***/
 log.info("Initializing model ...");
